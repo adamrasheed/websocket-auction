@@ -1,0 +1,23 @@
+{
+  "name": "fl-backend-takehome",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "packageManager": "bun@1.2.11",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "turbo": "^2.5.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
