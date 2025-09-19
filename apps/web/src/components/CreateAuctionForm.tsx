@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useMutation, gql, useApolloClient } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client";
+import { CREATE_AUCTION, GET_ACTIVE_AUCTION } from "../graphql/operations";
 
 interface FormData {
   startingBid: number;
@@ -7,51 +8,11 @@ interface FormData {
   extendedBidding: boolean;
 }
 
-const CREATE_AUCTION = gql`
-  mutation CreateAuction(
-    $startingBid: Float!
-    $duration: Int
-    $extendedBidding: Boolean
-  ) {
-    createAuction(
-      startingBid: $startingBid
-      duration: $duration
-      extendedBidding: $extendedBidding
-    ) {
-      id
-      startingBid
-      currentBid
-      currentWinner
-      duration
-      startTime
-      endTime
-      isActive
-      extendedBidding
-    }
-  }
-`;
-
 const initialFormData: FormData = {
   startingBid: 1,
   duration: 30,
   extendedBidding: true,
 };
-
-const GET_ACTIVE_AUCTION = gql`
-  query GetActiveAuction {
-    activeAuction {
-      id
-      startingBid
-      currentBid
-      currentWinner
-      duration
-      startTime
-      endTime
-      isActive
-      extendedBidding
-    }
-  }
-`;
 
 export function CreateAuctionForm() {
   const [formData, setFormData] = useState<FormData>({
@@ -59,6 +20,14 @@ export function CreateAuctionForm() {
   });
 
   const client = useApolloClient();
+
+  // Check for active auction
+  const { data: activeAuctionData, loading: auctionLoading } = useQuery(
+    GET_ACTIVE_AUCTION,
+    {
+      fetchPolicy: "cache-and-network",
+    }
+  );
 
   const [createAuction, { loading, error }] = useMutation(CREATE_AUCTION, {
     onCompleted: (data) => {
@@ -107,6 +76,15 @@ export function CreateAuctionForm() {
       [name]: type === "checkbox" ? checked : Number(value),
     }));
   };
+
+  // Don't render the form if there's an active auction
+  if (auctionLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (activeAuctionData?.activeAuction?.isActive) {
+    return null;
+  }
 
   return (
     <div className="auction-section">

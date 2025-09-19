@@ -6,6 +6,9 @@ let counter = 0;
 
 // Auction state management
 let activeAuction: Auction | null = null;
+let auctionsList: Auction[] = [];
+
+console.log("Server starting - auctionsList initialized with", auctionsList.length, "auctions");
 
 // PubSub for real-time subscriptions
 const pubsub = new PubSub();
@@ -14,6 +17,7 @@ export const typeDefs = gql`
   type Query {
     counter: Int
     activeAuction: Auction
+    auctions: [Auction!]!
   }
 
   type Mutation {
@@ -30,6 +34,7 @@ export const typeDefs = gql`
     auctionStarted: Auction
     bidPlaced: Bid
     auctionEnded: Auction
+    auctionsUpdated: [Auction!]!
   }
 
   type Auction {
@@ -64,6 +69,10 @@ export const resolvers = {
   Query: {
     counter: () => counter,
     activeAuction: () => activeAuction,
+    auctions: () => {
+      console.log("auctions query called, returning:", auctionsList.length, "auctions");
+      return auctionsList;
+    },
   },
   Mutation: {
     incrementCounter: () => {
@@ -104,15 +113,41 @@ export const resolvers = {
 
       activeAuction = newAuction;
 
+      auctionsList.push(newAuction);
+      console.log("Added auction to auctionsList. Total auctions:", auctionsList.length);
+
       // Publish auction started event
       console.log("Publishing AUCTION_STARTED event:", newAuction.id);
       pubsub.publish("AUCTION_STARTED", { auctionStarted: newAuction });
+
+      // Publish auctions list update for live revalidation
+      console.log(
+        "Publishing AUCTIONS_UPDATED event (auction created) with auctions:",
+        auctionsList.length
+      );
+      pubsub.publish("AUCTIONS_UPDATED", { auctionsUpdated: auctionsList });
 
       // Set up auction end timer
       setTimeout(() => {
         if (activeAuction && activeAuction.id === newAuction.id) {
           activeAuction.isActive = false;
+
+          // Update the auction in the auctionsList as well
+          const auctionInList = auctionsList.find(
+            (auction) => auction.id === newAuction.id
+          );
+          if (auctionInList) {
+            auctionInList.isActive = false;
+          }
+
           pubsub.publish("AUCTION_ENDED", { auctionEnded: activeAuction });
+
+          // Publish auctions list update for live revalidation
+          console.log(
+            "Publishing AUCTIONS_UPDATED event with auctions:",
+            auctionsList.length
+          );
+          pubsub.publish("AUCTIONS_UPDATED", { auctionsUpdated: auctionsList });
         }
       }, duration * 1000);
 
@@ -169,17 +204,38 @@ export const resolvers = {
       activeAuction.currentBid = amount;
       activeAuction.currentWinner = bidder;
 
+      // Update the auction in the auctionsList as well
+      const auctionInList = auctionsList.find(
+        (auction) => auction.id === auctionId
+      );
+      if (auctionInList) {
+        auctionInList.currentBid = amount;
+        auctionInList.currentWinner = bidder;
+      }
+
       // Handle extended bidding
       if (activeAuction.extendedBidding) {
         const timeRemaining = activeAuction.endTime - now;
         if (timeRemaining < 10000) {
           // Less than 10 seconds
           activeAuction.endTime = now + 10000; // Extend to 10 seconds from now
+
+          // Update the end time in the auctionsList as well
+          if (auctionInList) {
+            auctionInList.endTime = activeAuction.endTime;
+          }
         }
       }
 
       // Publish bid placed event
       pubsub.publish("BID_PLACED", { bidPlaced: bid });
+
+      // Publish auctions list update for live revalidation
+      console.log(
+        "Publishing AUCTIONS_UPDATED event (bid placed) with auctions:",
+        auctionsList.length
+      );
+      pubsub.publish("AUCTIONS_UPDATED", { auctionsUpdated: auctionsList });
 
       return {
         success: true,
@@ -206,6 +262,12 @@ export const resolvers = {
       subscribe: () => {
         console.log("Client subscribed to AUCTION_ENDED");
         return pubsub.asyncIterableIterator("AUCTION_ENDED");
+      },
+    },
+    auctionsUpdated: {
+      subscribe: () => {
+        console.log("Client subscribed to AUCTIONS_UPDATED");
+        return pubsub.asyncIterableIterator("AUCTIONS_UPDATED");
       },
     },
   },

@@ -1,29 +1,70 @@
-interface Auction {
-  id: string;
-  title: string;
-  startingBid: number;
-  duration: number;
-  extendedBidding: boolean;
-  createdAt: string;
-}
+import { useQuery, useSubscription } from "@apollo/client";
+import type { Auction } from "@shared/types";
+import {
+  GET_AUCTIONS,
+  AUCTIONS_UPDATED_SUBSCRIPTION,
+} from "../graphql/operations";
+import { useMemo } from "react";
 
-interface AuctionListProps {
-  auctions: Auction[];
-}
+export function AuctionList() {
+  const {
+    data,
+    loading: auctionsLoading,
+    error: auctionsError,
+    refetch,
+  } = useQuery<{ auctions: Auction[] }>(GET_AUCTIONS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    pollInterval: 2000, // Poll every 2 seconds as a fallback
+  });
 
-export function AuctionList({ auctions }: AuctionListProps) {
+  // Subscribe to live updates
+  useSubscription(AUCTIONS_UPDATED_SUBSCRIPTION, {
+    onData: () => {
+      // Force refetch when subscription data is received
+      refetch();
+    },
+    onError: (error) => {
+      console.error("AuctionList - subscription error:", error);
+    },
+    onComplete: () => {
+      console.log("AuctionList - subscription completed");
+    },
+    shouldResubscribe: true,
+  });
+
+  // Use query data (will be updated by refetch when subscription fires)
+  const auctions = data?.auctions || [];
+
+  const latestAuction = auctions[0] || null;
+  const isActive = latestAuction?.isActive || false;
+
+  const title = useMemo(() => {
+    if (!latestAuction) return "";
+    if (latestAuction.currentWinner) {
+      return `${latestAuction.currentWinner} won the auction`;
+    }
+    return isActive ? "Latest Auction" : "Latest Auction (Inactive)";
+  }, [latestAuction, isActive]);
+
+  if (auctionsLoading) {
+    return <div className="auction-list empty">Loading auctions...</div>;
+  }
+
+  if (auctionsError) {
+    return <div className="auction-list empty">Error loading auctions</div>;
+  }
+
   if (auctions.length === 0) {
     return <div className="auction-list empty">No auctions created yet</div>;
   }
-
-  const latestAuction = auctions[0];
 
   return (
     <div className="auction-list">
       <h2>Latest Auction</h2>
       <div className="auction-grid">
         <div className="auction-card">
-          <h3>{latestAuction.title}</h3>
+          <h3>{title}</h3>
           <div className="auction-details">
             <p>
               <strong>Starting Bid:</strong> $
@@ -46,7 +87,7 @@ export function AuctionList({ auctions }: AuctionListProps) {
             </p>
             <p>
               <strong>Created:</strong>{" "}
-              {new Date(latestAuction.createdAt).toLocaleString()}
+              {new Date(latestAuction.startTime).toLocaleString()}
             </p>
           </div>
         </div>

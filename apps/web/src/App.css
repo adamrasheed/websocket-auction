@@ -4,7 +4,55 @@
   padding: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  color: #161230;
+  color: var(--color-text-primary);
+}
+
+:root {
+  /* Text Colors */
+  --color-text: #213547;
+  --color-text-primary: #161230;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #666;
+  --color-text-light: #888;
+  --color-text-lighter: #999;
+
+  /* Brand Colors */
+  --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+  --color-primary-light: #61dafbaa;
+
+  /* Background Colors */
+  --color-bg-primary: white;
+  --color-bg-secondary: #f9f9f9;
+  --color-bg-hover: #f0f0f0;
+  --color-bg-gradient-start: #f0f8ff;
+  --color-bg-gradient-end: #e6f3ff;
+  --color-bg-disabled: #f8f9fa;
+
+  /* Border Colors */
+  --color-border: #ddd;
+  --color-border-light: #dee2e6;
+
+  /* Status Colors */
+  --color-success: #059669;
+  --color-success-bg: #d4edda;
+  --color-success-text: #155724;
+  --color-success-border: #c3e6cb;
+  --color-success-green: #28a745;
+
+  --color-error: #dc2626;
+  --color-error-bg: #f8d7da;
+  --color-error-text: #721c24;
+  --color-error-border: #f5c6cb;
+
+  --color-urgent: #ff4444;
+  --color-disabled: #ccc;
+
+  /* Shadow Colors */
+  --color-shadow: rgba(0, 0, 0, 0.05);
+  --color-shadow-medium: rgba(0, 0, 0, 0.1);
+  --color-shadow-focus: rgba(100, 108, 255, 0.1);
+  --color-shadow-focus-strong: rgba(100, 108, 255, 0.2);
 }
 
 #root {
@@ -14,25 +62,34 @@
   text-align: center;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
 h1 {
   font-size: 2rem;
   padding: 0;
   margin: 0;
   line-height: 1.1;
-  color: #213547;
+  color: var(--color-text);
 }
 
 .logo {
-  height: 4rem;
-  padding: 1rem;
+  display: block;
+  height: 3rem;
+  width: 3rem;
   will-change: filter;
   transition: filter 300ms;
+  color: currentColor;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em var(--color-primary-light));
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em var(--color-primary-light));
 }
 
 @keyframes logo-spin {
@@ -68,17 +125,17 @@ h1 {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #f9f9f9;
-  color: #213547;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
   cursor: pointer;
   transition: border-color 0.25s, background-color 0.25s;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
 }
 
 .card button:hover {
-  border-color: #646cff;
-  background-color: #f0f0f0;
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-hover);
 }
 
 .card button:focus,
@@ -87,7 +144,7 @@ h1 {
 }
 
 .read-the-docs {
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .auction-section {
@@ -103,17 +160,17 @@ h1 {
 
 .auction-list.empty {
   text-align: center;
-  color: #666;
+  color: var(--color-text-muted);
   font-style: italic;
   padding: 2rem;
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-secondary);
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
 }
 
 .auction-list h2 {
   margin-bottom: 1.5rem;
-  color: #213547;
+  color: var(--color-text);
   font-size: 1.5rem;
   text-align: center;
 }
@@ -126,16 +183,16 @@ h1 {
 .auction-card {
   width: 100%;
   max-width: 400px;
-  background-color: white;
-  border: 1px solid #ddd;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--color-shadow);
 }
 
 .auction-card h3 {
   margin: 0 0 1rem;
-  color: #213547;
+  color: var(--color-text);
   font-size: 1.25rem;
 }
 
@@ -147,11 +204,11 @@ h1 {
 
 .auction-details p {
   margin: 0;
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .auction-details strong {
-  color: #213547;
+  color: var(--color-text);
 }
 
 .checkbox-group {
@@ -171,25 +228,25 @@ h1 {
   height: 1.25em;
   margin-right: 1rem;
   cursor: pointer;
-  accent-color: #646cff;
+  accent-color: var(--color-primary);
   vertical-align: middle;
 }
 
 .toggle-text {
   font-size: 1em;
-  color: #213547;
+  color: var(--color-text);
   user-select: none;
   line-height: 1;
   vertical-align: middle;
 }
 
 .status-enabled {
-  color: #059669;
+  color: var(--color-success);
   font-weight: 500;
 }
 
 .status-disabled {
-  color: #dc2626;
+  color: var(--color-error);
   font-weight: 500;
 }
 
@@ -198,16 +255,16 @@ h1 {
   max-width: 400px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-secondary);
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
 .auction-form h2 {
-  color: #213547;
+  color: var(--color-text);
   font-size: 1.5rem;
 }
 
@@ -224,7 +281,7 @@ h1 {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #213547;
+  color: var(--color-text);
   font-weight: 500;
 }
 
@@ -232,15 +289,15 @@ h1 {
   width: 100%;
   padding: 0.6em;
   font-size: 1em;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--color-bg-primary);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #646cff;
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-focus);
 }
 
 .auction-form button {
@@ -249,8 +306,8 @@ h1 {
   padding: 0.8em;
   font-size: 1em;
   font-weight: 500;
-  color: white;
-  background-color: #646cff;
+  color: var(--color-bg-primary);
+  background-color: var(--color-primary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -258,21 +315,25 @@ h1 {
 }
 
 .auction-form button:hover {
-  background-color: #535bf2;
+  background-color: var(--color-primary-hover);
 }
 
 /* Auction Display Styles */
 .auction-display {
   margin: 2rem 0;
   padding: 2rem;
-  border: 2px solid #646cff;
+  border: 2px solid var(--color-primary);
   border-radius: 12px;
-  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(
+    135deg,
+    var(--color-bg-gradient-start) 0%,
+    var(--color-bg-gradient-end) 100%
+  );
+  box-shadow: 0 4px 6px var(--color-shadow-medium);
 }
 
 .auction-display h2 {
-  color: #213547;
+  color: var(--color-text);
   margin-bottom: 1.5rem;
   font-size: 2em;
 }
@@ -286,15 +347,15 @@ h1 {
 }
 
 .bid-message.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .bid-message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
+  border: 1px solid var(--color-error-border);
 }
 
 .auction-info {
@@ -308,27 +369,27 @@ h1 {
 .auction-bid {
   text-align: center;
   padding: 1.5rem;
-  background: white;
+  background: var(--color-bg-primary);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--color-shadow-medium);
 }
 
 .auction-timer h3,
 .auction-bid h3 {
   margin: 0 0 1rem 0;
-  color: #213547;
+  color: var(--color-text);
   font-size: 1.2em;
 }
 
 .timer {
   font-size: 3em;
   font-weight: bold;
-  color: #646cff;
+  color: var(--color-primary);
   font-family: "Courier New", monospace;
 }
 
 .timer.urgent {
-  color: #ff4444;
+  color: var(--color-urgent);
   animation: pulse 1s infinite;
 }
 
@@ -345,39 +406,39 @@ h1 {
 .bid-amount {
   font-size: 2.5em;
   font-weight: bold;
-  color: #28a745;
+  color: var(--color-success-green);
   margin-bottom: 0.5rem;
 }
 
 .current-winner {
   font-size: 1.1em;
-  color: #666;
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
 .no-bids {
   font-size: 1em;
-  color: #999;
+  color: var(--color-text-lighter);
   font-style: italic;
 }
 
 .next-bid {
   font-size: 1em;
-  color: #646cff;
+  color: var(--color-primary);
   font-weight: bold;
   margin-top: 0.5rem;
 }
 
 .bid-form {
-  background: white;
+  background: var(--color-bg-primary);
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--color-shadow-medium);
 }
 
 .bid-form h3 {
   margin: 0 0 1.5rem 0;
-  color: #213547;
+  color: var(--color-text);
 }
 
 .bid-form .form-group {
@@ -389,28 +450,28 @@ h1 {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
-  color: #213547;
+  color: var(--color-text);
 }
 
 .bid-form input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 1rem;
 }
 
 .bid-form input:focus {
   outline: none;
-  border-color: #646cff;
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-focus-strong);
 }
 
 .bid-form button {
   width: 100%;
   padding: 1rem;
-  background-color: #646cff;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg-primary);
   border: none;
   border-radius: 4px;
   font-size: 1.1rem;
@@ -420,30 +481,56 @@ h1 {
 }
 
 .bid-form button:hover:not(:disabled) {
-  background-color: #535bf2;
+  background-color: var(--color-primary-hover);
 }
 
 .bid-form button:disabled {
-  background-color: #ccc;
+  background-color: var(--color-disabled);
   cursor: not-allowed;
 }
 
 .auction-ended {
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
-  border: 2px solid #dee2e6;
+  border: 3px solid #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+  margin-top: 1rem;
 }
 
 .auction-ended h3 {
-  color: #213547;
-  margin-bottom: 1rem;
+  color: #28a745;
+  margin-bottom: 1.5rem;
+  font-size: 1.8em;
+  font-weight: bold;
 }
 
-.auction-ended p {
+.winner-announcement {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #28a745;
+  margin: 1rem 0;
+}
+
+.winner-text {
+  font-size: 1.4em;
+  color: #28a745;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.winning-bid {
   font-size: 1.2em;
-  color: #666;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.no-winner {
+  font-size: 1.2em;
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 @media (max-width: 768px) {

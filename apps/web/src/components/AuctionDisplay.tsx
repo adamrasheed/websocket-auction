@@ -3,91 +3,15 @@ import {
   useSubscription,
   useQuery,
   useMutation,
-  gql,
   useApolloClient,
 } from "@apollo/client";
-
-const GET_ACTIVE_AUCTION = gql`
-  query GetActiveAuction {
-    activeAuction {
-      id
-      startingBid
-      currentBid
-      currentWinner
-      duration
-      startTime
-      endTime
-      isActive
-      extendedBidding
-    }
-  }
-`;
-
-const AUCTION_STARTED_SUBSCRIPTION = gql`
-  subscription AuctionStarted {
-    auctionStarted {
-      id
-      startingBid
-      currentBid
-      currentWinner
-      duration
-      startTime
-      endTime
-      isActive
-      extendedBidding
-    }
-  }
-`;
-
-const BID_PLACED_SUBSCRIPTION = gql`
-  subscription BidPlaced {
-    bidPlaced {
-      id
-      auctionId
-      amount
-      bidder
-      timestamp
-    }
-  }
-`;
-
-const AUCTION_ENDED_SUBSCRIPTION = gql`
-  subscription AuctionEnded {
-    auctionEnded {
-      id
-      startingBid
-      currentBid
-      currentWinner
-      duration
-      startTime
-      endTime
-      isActive
-      extendedBidding
-    }
-  }
-`;
-
-const PLACE_BID = gql`
-  mutation PlaceBid($auctionId: ID!, $amount: Float!, $bidder: String!) {
-    placeBid(auctionId: $auctionId, amount: $amount, bidder: $bidder) {
-      success
-      message
-      bid {
-        id
-        amount
-        bidder
-        timestamp
-      }
-      auction {
-        id
-        currentBid
-        currentWinner
-        endTime
-        isActive
-      }
-    }
-  }
-`;
+import {
+  GET_ACTIVE_AUCTION,
+  AUCTION_STARTED_SUBSCRIPTION,
+  BID_PLACED_SUBSCRIPTION,
+  AUCTION_ENDED_SUBSCRIPTION,
+  PLACE_BID,
+} from "../graphql/operations";
 
 export function AuctionDisplay() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -167,7 +91,18 @@ export function AuctionDisplay() {
   useSubscription(AUCTION_ENDED_SUBSCRIPTION, {
     onData: ({ data }) => {
       console.log("Auction ended:", data.data?.auctionEnded);
-      setBidMessage("Auction ended!");
+      const auction = data.data?.auctionEnded;
+      if (auction) {
+        if (auction.currentWinner) {
+          setBidMessage(
+            `🎉 Auction has Ended! ${auction.currentWinner} is the winner!`
+          );
+        } else {
+          setBidMessage("Auction has Ended! No bids were placed.");
+        }
+      } else {
+        setBidMessage("Auction ended!");
+      }
 
       // Update Apollo cache
       if (data.data?.auctionEnded) {
@@ -196,14 +131,45 @@ export function AuctionDisplay() {
         0,
         activeAuctionData.activeAuction.endTime - now
       );
-      setTimeRemaining(Math.ceil(remaining / 1000));
+      const secondsRemaining = Math.ceil(remaining / 1000);
+      setTimeRemaining(secondsRemaining);
+
+      // If time has run out on the client side, update the auction state immediately
+      if (secondsRemaining <= 0 && activeAuctionData.activeAuction.isActive) {
+        console.log("Client-side auction timeout detected, updating cache");
+
+        // Update the Apollo cache to mark auction as inactive
+        const updatedAuction = {
+          ...activeAuctionData.activeAuction,
+          isActive: false,
+        };
+
+        client.writeQuery({
+          query: GET_ACTIVE_AUCTION,
+          data: {
+            activeAuction: updatedAuction,
+          },
+        });
+
+        // Show the auction ended message
+        if (updatedAuction.currentWinner) {
+          setBidMessage(
+            `🎉 Auction has Ended! ${updatedAuction.currentWinner} is the winner!`
+          );
+        } else {
+          setBidMessage("Auction has Ended! No bids were placed.");
+        }
+      }
     };
 
     updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+
+    // Update more frequently when close to ending for better responsiveness
+    const updateFrequency = 100; // Update every 100ms for better responsiveness
+    const interval = setInterval(updateTimer, updateFrequency);
 
     return () => clearInterval(interval);
-  }, [activeAuctionData?.activeAuction]);
+  }, [activeAuctionData?.activeAuction, client]);
 
   // Set initial bid amount
   useEffect(() => {
@@ -250,8 +216,6 @@ export function AuctionDisplay() {
   if (auctionLoading) return <div>Loading auction...</div>;
 
   const auction = activeAuctionData?.activeAuction;
-
-  console.log("Auction:", auction);
 
   if (!auction) {
     return (
@@ -343,14 +307,18 @@ export function AuctionDisplay() {
 
       {!auction.isActive && (
         <div className="auction-ended">
-          <h3>Auction Ended</h3>
+          <h3>🎉 Auction has Ended! 🎉</h3>
           {auction.currentWinner ? (
-            <p>
-              Winner: {auction.currentWinner} with $
-              {auction.currentBid.toFixed(2)}
-            </p>
+            <div className="winner-announcement">
+              <p className="winner-text">
+                <strong>{auction.currentWinner}</strong> is the winner!
+              </p>
+              <p className="winning-bid">
+                Winning bid: <strong>${auction.currentBid.toFixed(2)}</strong>
+              </p>
+            </div>
           ) : (
-            <p>No bids were placed</p>
+            <p className="no-winner">No bids were placed - no winner</p>
           )}
         </div>
       )}
