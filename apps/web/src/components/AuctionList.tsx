@@ -11,41 +11,20 @@ export function AuctionList() {
     data,
     loading: auctionsLoading,
     error: auctionsError,
-    refetch,
   } = useQuery<{ auctions: Auction[] }>(GET_AUCTIONS, {
     fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: true,
-    pollInterval: 2000, // Poll every 2 seconds as a fallback
   });
 
   // Subscribe to live updates
   useSubscription(AUCTIONS_UPDATED_SUBSCRIPTION, {
-    onData: () => {
-      // Force refetch when subscription data is received
-      refetch();
-    },
-    onError: (error) => {
-      console.error("AuctionList - subscription error:", error);
-    },
-    onComplete: () => {
-      console.log("AuctionList - subscription completed");
-    },
     shouldResubscribe: true,
   });
 
-  // Use query data (will be updated by refetch when subscription fires)
-  const auctions = data?.auctions || [];
-
-  const latestAuction = auctions[0] || null;
-  const isActive = latestAuction?.isActive || false;
-
-  const title = useMemo(() => {
-    if (!latestAuction) return "";
-    if (latestAuction.currentWinner) {
-      return `${latestAuction.currentWinner} won the auction`;
-    }
-    return isActive ? "Latest Auction" : "Latest Auction (Inactive)";
-  }, [latestAuction, isActive]);
+  const inActiveAuctions = useMemo(() => {
+    const auctions = data?.auctions || [];
+    return auctions.filter((auction) => !auction.isActive);
+  }, [data?.auctions]);
 
   if (auctionsLoading) {
     return <div className="auction-list empty">Loading auctions...</div>;
@@ -55,16 +34,21 @@ export function AuctionList() {
     return <div className="auction-list empty">Error loading auctions</div>;
   }
 
-  if (auctions.length === 0) {
+  if (inActiveAuctions.length === 0) {
     return <div className="auction-list empty">No auctions created yet</div>;
   }
 
+  const latestAuction = inActiveAuctions[0] || null;
+  const winnerTitle = latestAuction?.currentWinner
+    ? `Winner: ${latestAuction.currentWinner}`
+    : "Latest Auction";
+
   return (
-    <div className="auction-list">
+    <div className="auction-list card">
       <h2>Latest Auction</h2>
       <div className="auction-grid">
         <div className="auction-card">
-          <h3>{title}</h3>
+          <h3>{latestAuction ? winnerTitle : "No auctions created yet"}</h3>
           <div className="auction-details">
             <p>
               <strong>Starting Bid:</strong> $

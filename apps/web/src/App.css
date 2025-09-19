@@ -7,6 +7,16 @@
   color: var(--color-text-primary);
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+}
 :root {
   /* Text Colors */
   --color-text: #213547;
@@ -60,6 +70,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  color: var(--color-text);
 }
 
 .header {
@@ -74,13 +85,12 @@ h1 {
   padding: 0;
   margin: 0;
   line-height: 1.1;
-  color: var(--color-text);
 }
 
 .logo {
   display: block;
-  height: 3rem;
-  width: 3rem;
+  height: 2rem;
+  width: 2rem;
   will-change: filter;
   transition: filter 300ms;
   color: currentColor;
@@ -113,6 +123,10 @@ h1 {
   flex-direction: column;
   gap: 1rem;
   align-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 4px var(--color-shadow-medium);
+  background-color: var(--color-bg-secondary);
 }
 
 .card span {
@@ -126,7 +140,7 @@ h1 {
   font-weight: 500;
   font-family: inherit;
   background-color: var(--color-bg-secondary);
-  color: var(--color-text);
+
   cursor: pointer;
   transition: border-color 0.25s, background-color 0.25s;
   border-radius: 8px;
@@ -168,31 +182,14 @@ h1 {
   border: 1px solid var(--color-border);
 }
 
-.auction-list h2 {
-  margin-bottom: 1.5rem;
-  color: var(--color-text);
-  font-size: 1.5rem;
-  text-align: center;
-}
-
 .auction-grid {
   display: flex;
   justify-content: center;
 }
 
-.auction-card {
-  width: 100%;
-  max-width: 400px;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px var(--color-shadow);
-}
-
 .auction-card h3 {
   margin: 0 0 1rem;
-  color: var(--color-text);
+
   font-size: 1.25rem;
 }
 
@@ -208,7 +205,6 @@ h1 {
 }
 
 .auction-details strong {
-  color: var(--color-text);
 }
 
 .checkbox-group {

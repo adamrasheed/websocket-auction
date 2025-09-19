@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useSubscription,
   useQuery,
@@ -18,16 +18,24 @@ export function AuctionDisplay() {
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [bidderName, setBidderName] = useState<string>("");
   const [bidMessage, setBidMessage] = useState<string>("");
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced update function to prevent rapid successive updates
+  const debouncedUpdate = (updateFn: () => void, delay: number = 100) => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    updateTimeoutRef.current = setTimeout(updateFn, delay);
+  };
 
   const client = useApolloClient();
-  const {
-    data: activeAuctionData,
-    loading: auctionLoading,
-    refetch,
-  } = useQuery(GET_ACTIVE_AUCTION, {
-    fetchPolicy: "cache-and-network",
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data: activeAuctionData, loading: auctionLoading } = useQuery(
+    GET_ACTIVE_AUCTION,
+    {
+      fetchPolicy: "cache-and-network",
+      notifyOnNetworkStatusChange: true,
+    }
+  );
   const [placeBid, { loading: bidLoading }] = useMutation(PLACE_BID);
 
   // Subscribe to auction events
@@ -36,17 +44,17 @@ export function AuctionDisplay() {
       console.log("Auction started:", data.data?.auctionStarted);
       setBidMessage("Auction started!");
 
-      // Update Apollo cache
+      // Update Apollo cache with debouncing
       if (data.data?.auctionStarted) {
-        client.writeQuery({
-          query: GET_ACTIVE_AUCTION,
-          data: {
-            activeAuction: data.data.auctionStarted,
-          },
+        debouncedUpdate(() => {
+          client.writeQuery({
+            query: GET_ACTIVE_AUCTION,
+            data: {
+              activeAuction: data.data.auctionStarted,
+            },
+          });
+          console.log("Updated cache for auction started");
         });
-        // Also refetch to ensure we have the latest data
-        refetch();
-        console.log("Updated cache and refetched for auction started");
       }
     },
     onError: (error) => {
@@ -64,7 +72,7 @@ export function AuctionDisplay() {
         `New bid: $${data.data?.bidPlaced.amount} by ${data.data?.bidPlaced.bidder}`
       );
 
-      // Update Apollo cache with new auction state
+      // Update Apollo cache with new auction state (debounced)
       if (data.data?.bidPlaced && activeAuctionData?.activeAuction) {
         const updatedAuction = {
           ...activeAuctionData.activeAuction,
@@ -72,18 +80,17 @@ export function AuctionDisplay() {
           currentWinner: data.data.bidPlaced.bidder,
         };
 
-        client.writeQuery({
-          query: GET_ACTIVE_AUCTION,
-          data: {
-            activeAuction: updatedAuction,
-          },
+        debouncedUpdate(() => {
+          client.writeQuery({
+            query: GET_ACTIVE_AUCTION,
+            data: {
+              activeAuction: updatedAuction,
+            },
+          });
         });
 
         // Update next bid amount for this user
         setBidAmount(data.data.bidPlaced.amount + 1);
-
-        // Also refetch to ensure we have the latest data
-        refetch();
       }
     },
   });
@@ -104,16 +111,16 @@ export function AuctionDisplay() {
         setBidMessage("Auction ended!");
       }
 
-      // Update Apollo cache
+      // Update Apollo cache (debounced)
       if (data.data?.auctionEnded) {
-        client.writeQuery({
-          query: GET_ACTIVE_AUCTION,
-          data: {
-            activeAuction: data.data.auctionEnded,
-          },
+        debouncedUpdate(() => {
+          client.writeQuery({
+            query: GET_ACTIVE_AUCTION,
+            data: {
+              activeAuction: data.data.auctionEnded,
+            },
+          });
         });
-        // Also refetch to ensure we have the latest data
-        refetch();
       }
     },
   });
@@ -164,11 +171,16 @@ export function AuctionDisplay() {
 
     updateTimer();
 
-    // Update more frequently when close to ending for better responsiveness
-    const updateFrequency = 100; // Update every 100ms for better responsiveness
+    // Update every second for better performance while maintaining responsiveness
+    const updateFrequency = 1000; // Update every 1 second
     const interval = setInterval(updateTimer, updateFrequency);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
   }, [activeAuctionData?.activeAuction, client]);
 
   // Set initial bid amount
